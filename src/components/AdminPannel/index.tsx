@@ -14,9 +14,9 @@ const AdminPannel = () => {
           <DataTags />
           <PorfolioContent />
         </div>
-        <div className="w-[500px]">
+        {/* <div className="w-[500px]">
           <PortfolioDetails />
-        </div>
+        </div> */}
       </div>
     </div>
   );
