@@ -14,10 +14,50 @@ import {
   uploadBytesResumable,
   getDownloadURL,
   StorageError,
-  StorageReference,
 } from "firebase/storage";
 import { TArticle, TFeedback, TService } from "../Types";
-import { Unsubscribe } from "@firebase/util";
+import supabase from "../config/supabase";
+import { v4 as uuid } from "uuid";
+export async function addArticle(article: Partial<TArticle>) {
+  return await supabase.from("articles").insert(article);
+}
+
+export async function deleteArticle(id: string) {
+  return await supabase.from("articles").delete().eq("id", id);
+}
+
+export async function updateArticle(id: string, article: Partial<TArticle>) {
+  return await supabase
+    .from("articles")
+    .update({ ...article })
+    .eq("id", id);
+}
+
+export async function getArticles() {
+  try {
+    const { data, error } = await supabase.from("articles").select("*");
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function uploadImage(file: File, bucketName: "covers") {
+  try {
+    const filePath = uuid() + "-" + file.name;
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file);
+
+    if (error) {
+      throw error;
+    }
+    return data.fullPath;
+  } catch (error) {
+    throw error;
+  }
+}
 
 class DatabaseServices {
   public readonly realtimeDb;

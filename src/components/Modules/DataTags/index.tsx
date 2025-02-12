@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import databaseServices from "../../../services/databaseServices";
+import databaseServices, {
+  getArticles,
+} from "../../../services/databaseServices";
 import { TArticle } from "../../../Types";
 import { VArticle, VFeedback, VService } from "../__vectors";
 
@@ -8,9 +10,10 @@ const DataTags = () => {
 
   useEffect(() => {
     (async () => {
-      databaseServices.getData("articles", (data: TArticle[]) => {
+      const data = await getArticles();
+      if (data) {
         setArticles(data);
-      });
+      }
     })();
   }, []);
 
@@ -29,7 +32,7 @@ const DataTags = () => {
           <VService className="text-2xl text-white" />
         </p>
         <div>
-          <p className="font-bold">6 Services</p>
+          <p className="font-bold">0 Activties</p>
         </div>
       </div>
       <div className="flex gap-5 justify-start items-center bg-white border h-fit p-5 rounded-lg shadow-lg">
@@ -37,7 +40,7 @@ const DataTags = () => {
           <VFeedback className="text-2xl text-white" />
         </p>
         <div>
-          <p className="font-bold">10 Temoignages</p>
+          <p className="font-bold">0 coming</p>
         </div>
       </div>
     </div>

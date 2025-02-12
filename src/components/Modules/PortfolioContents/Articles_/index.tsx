@@ -1,5 +1,9 @@
-import React, { ChangeEventHandler, useEffect, useRef, useState } from "react";
-import databaseServices from "../../../../services/databaseServices";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  addArticle,
+  getArticles,
+  uploadImage,
+} from "../../../../services/databaseServices";
 import { TArticle } from "../../../../Types";
 import DataNotFound from "../../DataNotFound";
 import { VSearch } from "../../__vectors";
@@ -8,10 +12,9 @@ import MarkdownIt from "markdown-it";
 import MdEditor from "react-markdown-editor-lite";
 import "react-markdown-editor-lite/lib/index.css";
 import ShowWidget from "../../ShowWidget";
-import { v4 as uuid } from "uuid";
+import { SUPABASE_DB_URL } from "../../../../config/supabase";
 
 const mdParser = new MarkdownIt();
-const toDay = new Date();
 const weekday = new Array(7);
 weekday[0] = "Sun";
 weekday[1] = "Mon";
@@ -22,14 +25,12 @@ weekday[5] = "Fri";
 weekday[6] = "Sat";
 
 const Articles = () => {
-  const [articles, setArticles] = useState<TArticle[]>([]);
+  const [articles, setArticles] = useState<Partial<TArticle[]>>([]);
   const [isEditor, setIsEditor] = useState(false);
-  const [articleData, setArticleData] = useState<TArticle>({
-    id: "",
+  const [articleData, setArticleData] = useState<Partial<TArticle>>({
     title: "",
     cover: "",
     content: "",
-    date: "",
     time: "",
     author: "",
     readTime: "",
@@ -40,64 +41,53 @@ const Articles = () => {
 
   useEffect(() => {
     (async () => {
-      databaseServices.getData("articles", (data: TArticle[]) => {
+      const data = await getArticles();
+      if (data) {
         setArticles(data);
-      });
+      }
     })();
-  }, []);
-
-  useEffect(() => {
-    setArticleData({
-      ...articleData,
-      id: uuid(),
-      date: `${toDay.getMonth()}/${
-        weekday[toDay.getDay()]
-      }/${toDay.getFullYear()}`,
-      time: `${toDay.getHours()} : ${toDay.getMinutes()}`,
-    });
   }, []);
 
   const handleEditorChange = ({ text }: any) => {
     setArticleData({ ...articleData, content: text });
   };
 
-  const onCoverChange = (e: any) => {
+  const onCoverChange = async (e: any) => {
     const file = e.target.files[0];
 
-    const handleError = (err: any) => {
-      if (err) throw err;
-    };
-
-    const getUrl = (url: string | undefined) => {
-      setArticleData({ ...articleData, cover: url! });
-      return url;
-    };
-
-    databaseServices.uploadFile(file, handleError, getUrl);
-  };
-
-  const onPublishArticle = async (e: any) => {
-    e.preventDefault();
-    const response = await databaseServices.addNewArticle(articleData);
-
-    if (response.error) {
-      window.alert("Error found when trying to upload the article , try later");
-    } else {
-      window.alert(response.message);
-
+    const url = await uploadImage(file, "covers");
+    if (url) {
       setArticleData({
-        id: "",
-        title: "",
-        cover: "",
-        content: "",
-        date: "",
-        time: "",
-        author: "",
-        readTime: "",
-        presentation: "",
+        ...articleData,
+        cover: `${SUPABASE_DB_URL}/storage/v1/object/public/${url}`!,
       });
     }
   };
+
+  const onPublishArticle = useCallback(
+    async (e: any) => {
+      e.preventDefault();
+      const response = await addArticle(articleData);
+
+      if (response.error) {
+        window.alert(
+          "Error found when trying to upload the article , try later"
+        );
+      } else {
+        window.alert("Article saved successfully");
+        setArticleData({
+          id: "",
+          title: "",
+          cover: "",
+          content: "",
+          author: "",
+          readTime: "",
+          presentation: "",
+        });
+      }
+    },
+    [articleData]
+  );
 
   return (
     <div className="flex flex-col gap-10">
@@ -121,11 +111,9 @@ const Articles = () => {
           </button>
           <ShowWidget
             condition={
-              articleData.time !== "" &&
               articleData.author !== "" &&
               articleData.content !== "" &&
               articleData.cover !== "" &&
-              articleData.date !== "" &&
               articleData.title !== ""
             }
           >
@@ -160,7 +148,7 @@ const Articles = () => {
             articles.map((article, index) => {
               return (
                 <div key={index} className="snap-center w-full">
-                  <ArticleCard article={article} />
+                  <ArticleCard article={article as Partial<TArticle>} />
                 </div>
               );
             })

@@ -1,14 +1,15 @@
 import React from "react";
-import databaseServices from "../../../../../services/databaseServices";
+import { deleteArticle } from "../../../../../services/databaseServices";
 import { TArticle } from "../../../../../Types";
 
 interface IProps {
-  article: TArticle;
+  article: Partial<TArticle>;
 }
 
 const ArticleCard = ({ article }: IProps) => {
   const onDeleteArticle = () => {
-    databaseServices.deleteData(article.id, "articles");
+    if (!article.id) return;
+    deleteArticle(article.id);
   };
 
   return (

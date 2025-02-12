@@ -9,7 +9,7 @@ export type TArticle = {
   title: string;
   cover: string;
   content: string;
-  date: string;
+  created_at: string;
   time: string;
   author: string;
   readTime?: string;
