@@ -13,6 +13,7 @@ import MdEditor from "react-markdown-editor-lite";
 import "react-markdown-editor-lite/lib/index.css";
 import ShowWidget from "../../ShowWidget";
 import { SUPABASE_DB_URL } from "../../../../config/supabase";
+import slugify from "slugify";
 
 const mdParser = new MarkdownIt();
 const weekday = new Array(7);
@@ -67,7 +68,10 @@ const Articles = () => {
   const onPublishArticle = useCallback(
     async (e: any) => {
       e.preventDefault();
-      const response = await addArticle(articleData);
+      const response = await addArticle({
+        ...articleData,
+        slug: slugify(articleData?.title || ""),
+      });
 
       if (response.error) {
         window.alert(

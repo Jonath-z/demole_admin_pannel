@@ -14,6 +14,7 @@ export type TArticle = {
   author: string;
   readTime?: string;
   presentation?: string;
+  slug?: string;
 };
 
 export type TFeedback = {
